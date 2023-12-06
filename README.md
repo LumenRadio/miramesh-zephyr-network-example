@@ -80,3 +80,24 @@ If you have an existing nRF Connect SDK west workspace follow these steps:
     west flash --dev-id <snr>
     ```
 10. Connect to the development kit's serial port. After a reset, you should see a message like "-------------------MiraMesh Sender-------------------." A continuous stream of "Waiting for network..." indicates a successful license programming. To send messages, a receiver device is required, which you can set up using the network-receiver example [here](https://github.com/LumenRadio/mira-examples). Note: MiraMesh connection times can improve if you reset the network sender after initializing the receiver.
+
+## Update via MCUboot
+The example by default uses MCUboot to support updates via FOTA.
+
+To create a upgrade image and install it:
+1. Build the new application with west.
+2. Run `create_update_image.py` to create an upgrade image.
+   The python requirements are in the requirements.txt file,
+   install via `pip3 install -r requirements.txt`.
+   Use `--help` as argument to `create_update_image.py` to see its
+   possible arguments.
+   Its default arguments are suitable for nRF52840.
+   For nRF52832 use:
+   ```
+   ./create_update_image.py --backup-header-start 0x7d000 --backup-trailer-start 0x7e000
+   ```
+3. Install it.
+   Run:
+   ```
+   nrfjprog --program update_app.hex --sectorerase --verify -r
+   ```
