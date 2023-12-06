@@ -1,0 +1,13 @@
+// Take 0x1000 bytes from storage partition and use for mira factory config
+&storage_partition {
+    reg = <0x000F8000 0x00007000>;
+};
+
+&flash0 {
+    partitions {
+        compatible = "fixed-partitions";
+        factory_config: partition@FF000 {
+          reg = <0xFF000 0x1000>;
+        };
+    };
+};

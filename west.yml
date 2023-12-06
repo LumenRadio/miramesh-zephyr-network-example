@@ -1,0 +1,19 @@
+manifest:
+  remotes:
+    - name: ncs
+      url-base: https://github.com/nrfconnect
+    - name: miramesh-zephyr
+      url-base: https://github.com/LumenRadio/miramesh-zephyr
+  projects:
+    - name: nrf
+      repo-path: sdk-nrf
+      remote: ncs
+      revision: v2.5.0
+      import: true
+    - name: miramesh-zephyr
+      remote: miramesh-zephyr
+      repo-path: miramesh-zephyr
+      path: modules/miramesh-zephyr
+      revision: main
+  self:
+    path: app
