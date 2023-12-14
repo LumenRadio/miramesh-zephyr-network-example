@@ -29,15 +29,20 @@
 #include <zephyr/console/console.h>
 #include <string.h>
 #include <stdio.h>
+#include <nrf.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/sys/ring_buffer.h>
 #include <zephyr/types.h>
 #include <zephyr/irq.h>
 #include <zephyr/logging/log.h>
-
+#include "fota-driver.h"
 #include <miramesh.h>
 
-static const mira_net_config_t net_config = {
+#define UDP_PORT 456
+#define UICR_MIRA_MODE_LOCATION 16
+#define UICR_ROOT_VALUE 0x1234
+
+static mira_net_config_t net_config = {
     .pan_id = 0x13243546,
     .key = {
         0x11, 0x12, 0x13, 0x14,
@@ -51,11 +56,73 @@ static const mira_net_config_t net_config = {
     .prefix = NULL
 };
 
-void network_sender_init(
+static void set_net_config(
     void)
 {
-    mira_net_init(&net_config);
+    uint32_t value;
+    value = NRF_UICR->CUSTOMER[UICR_MIRA_MODE_LOCATION];
+    if (value == UICR_ROOT_VALUE) {
+        printf("Setting up node as root\n");
+        net_config.mode = MIRA_NET_MODE_ROOT_NO_RECONNECT;
+        net_config.rate = MIRA_NET_RATE_FAST;
+    } else {
+        printf("Setting up node as mesh\n");
+        net_config.mode = MIRA_NET_MODE_MESH;
+        net_config.rate = MIRA_NET_RATE_FAST;
+    }
+}
 
+static void udp_listen_callback(
+    mira_net_udp_connection_t *connection,
+    const void *data,
+    uint16_t data_len,
+    const mira_net_udp_callback_metadata_t *metadata,
+    void *storage)
+{
+    char buffer[MIRA_NET_MAX_ADDRESS_STR_LEN];
+    uint16_t i;
+
+    printf("Received message from [%s]:%u: ",
+        mira_net_toolkit_format_address(buffer, metadata->source_address),
+        metadata->source_port);
+    for (i = 0; i < data_len; i++) {
+        printf("%c", ((char *) data)[i]);
+    }
+    printf("\n");
+}
+
+static void print_fota_image_status(uint16_t slot_id) {
+#if CONFIG_MIRA_FOTA_INIT   
+    if (mira_fota_is_valid(FOTA_SLOT_ID)) {
+        printf("FOTA image valid!\n");
+    } else {
+        printf("FOTA image invalid\n");
+    }
+#endif /* CONFIG_MIRA_FOTA_INIT */
+}
+
+static void poll_for_image(
+    void)
+{
+#if CONFIG_MIRA_FOTA_INIT
+    printf("Requesting firmware!\n");
+    int ret = mira_fota_force_request();
+    if(ret != 0) {
+        printf("Forced fota request failed: %d\n", ret);
+    }
+#endif /* CONFIG_MIRA_FOTA_INIT */
+}
+
+void network_init(
+    void)
+{
+    set_net_config();
+    mira_net_init(&net_config);
+#if CONFIG_MIRA_FOTA_INIT
+    fota_driver_set_custom_driver();
+    int ret = mira_fota_init();
+    printf("mira_fota_init(): %d\n", ret);
+#endif /* CONFIG_MIRA_FOTA_INIT */
 }
 
 void send_hello_world(
@@ -65,9 +132,10 @@ void send_hello_world(
     mira_net_state_t net_state;
     mira_status_t res;
     mira_net_address_t addr;
+    bool requested_fota_from_root = false;
     char buffer[MIRA_NET_MAX_ADDRESS_STR_LEN];
     char *message = "Hello world from Zephyr!";
-    conn = mira_net_udp_connect(NULL, 0, NULL, NULL);
+    conn = mira_net_udp_connect(NULL, 0, udp_listen_callback, NULL);
 
     while (1) {
         net_state = mira_net_get_state();
@@ -86,17 +154,30 @@ void send_hello_world(
                 printf("Waiting for root address\n");
                 k_sleep(K_SECONDS(1));
             } else {
+                // Force a early fota request as soon as joined, useful for testing
+                if (!requested_fota_from_root) {
+                    poll_for_image();
+                    requested_fota_from_root = true;
+                }
                 printf("Sending to address: %s\n",
                     mira_net_toolkit_format_address(buffer, &addr));
-                mira_net_udp_send_to(conn, &addr, 456, message, strlen(message));
+                mira_net_udp_send_to(conn, &addr, UDP_PORT, message, strlen(message));
+                print_fota_image_status(FOTA_SLOT_ID);
                 k_sleep(K_SECONDS(60));
             }
         }
     }
 }
 
-K_THREAD_DEFINE(send_hello_world_thread_id, 1024,
-    send_hello_world, NULL, NULL, NULL, 8, 0, 10000);
+void receieve_hello_world(
+    void)
+{
+    mira_net_udp_listen(UDP_PORT, udp_listen_callback, NULL);
+    while (1) {
+        print_fota_image_status(FOTA_SLOT_ID);
+        k_sleep(K_SECONDS(60));
+    }
+}
 
 int main(
     void)
@@ -111,7 +192,12 @@ int main(
         devid.u8[4], devid.u8[5], devid.u8[6], devid.u8[7]
     );
 
-    network_sender_init();
+    network_init();
+    if (net_config.mode == MIRA_NET_MODE_ROOT || net_config.mode == MIRA_NET_MODE_ROOT_NO_RECONNECT) {
+        receieve_hello_world();
+    } else {
+        send_hello_world();
+    }
     while (1) {
         k_sleep(K_FOREVER);
     }

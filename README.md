@@ -101,3 +101,24 @@ To create a upgrade image and install it:
    ```
    nrfjprog --program update_app.hex --sectorerase --verify -r
    ```
+### Propagating the installed firmware with Miramesh's built in firmware transfer
+The firmware installed with nrfjprog can be further propagated to other devices in 
+the network using Miramesh's firmware transfer method.
+
+To enable the firmware transfer, the following config needs to be added to prj.conf:
+```
+CONFIG_MIRA_FOTA_INIT=y
+```
+Then the firmware have to be installed on the root and the root will then propagate the firmware to the rest of the nodes in the network.
+
+By default the example will start as a mesh node, but the example supports running as a root
+also without any changes to the code.
+
+A node can be set to be a root by running:
+```
+nrfjprog --memwr 0x100010C0 --val 0x1234 -s <JLink serial number>
+```
+Which writes 0x1234 to NRF->UICR[16], then the device needs to be reset:
+```
+nrfjprog --reset -s <JLink serial number>
+```

@@ -1,0 +1,9 @@
+config MIRA_FOTA_INIT
+    bool "Initialize Mira FOTA driver"
+
+config MIRA_FOTA_LOGGING
+    bool "Turn on or off logging"
+
+menu "Zephyr Kernel"
+  source "Kconfig.zephyr"
+endmenu

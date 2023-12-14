@@ -16,10 +16,13 @@ endif()
 set(DTC_OVERLAY_FILE ${CMAKE_CURRENT_SOURCE_DIR}/boards/${BOARD}.overlay)
 
 find_package(Zephyr)# HINTS $ENV{ZEPHYR_BASE})
+
 project(my_project)
 
 target_sources(app PRIVATE
   src/main.c
+  src/fota-driver/fota-driver.c
 )
 
-zephyr_library_include_directories(.)
+zephyr_library_include_directories(.
+  src/fota-driver)
