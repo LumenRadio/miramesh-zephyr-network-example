@@ -3,7 +3,7 @@ manifest:
     - name: ncs
       url-base: https://github.com/nrfconnect
     - name: miramesh-zephyr
-      url-base: https://github.com/LumenRadio/miramesh-zephyr
+      url-base: https://github.com/LumenRadio
   projects:
     - name: nrf
       repo-path: sdk-nrf
