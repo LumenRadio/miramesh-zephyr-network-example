@@ -42,22 +42,29 @@
 #define UICR_MIRA_MODE_LOCATION 16
 #define UICR_ROOT_VALUE 0x1234
 
-static mira_net_config_t net_config = {
-    .pan_id = 0x13243546,
-    .key = {
-        0x11, 0x12, 0x13, 0x14,
-        0x21, 0x22, 0x23, 0x24,
-        0x31, 0x32, 0x33, 0x34,
-        0x41, 0x42, 0x43, 0x44
-    },
-    .mode = MIRA_NET_MODE_MESH,
-    .rate = MIRA_NET_RATE_MID,
-    .antenna = 0,
-    .prefix = NULL
-};
+static mira_net_config_t net_config = { .pan_id = 0x13243546,
+                                        .key = { 0x11,
+                                                 0x12,
+                                                 0x13,
+                                                 0x14,
+                                                 0x21,
+                                                 0x22,
+                                                 0x23,
+                                                 0x24,
+                                                 0x31,
+                                                 0x32,
+                                                 0x33,
+                                                 0x34,
+                                                 0x41,
+                                                 0x42,
+                                                 0x43,
+                                                 0x44 },
+                                        .mode = MIRA_NET_MODE_MESH,
+                                        .rate = MIRA_NET_RATE_MID,
+                                        .antenna = 0,
+                                        .prefix = NULL };
 
-static void set_net_config(
-    void)
+static void set_net_config(void)
 {
     uint32_t value;
     value = NRF_UICR->CUSTOMER[UICR_MIRA_MODE_LOCATION];
@@ -72,49 +79,47 @@ static void set_net_config(
     }
 }
 
-static void udp_listen_callback(
-    mira_net_udp_connection_t *connection,
-    const void *data,
-    uint16_t data_len,
-    const mira_net_udp_callback_metadata_t *metadata,
-    void *storage)
+static void udp_listen_callback(mira_net_udp_connection_t* connection,
+                                const void* data,
+                                uint16_t data_len,
+                                const mira_net_udp_callback_metadata_t* metadata,
+                                void* storage)
 {
     char buffer[MIRA_NET_MAX_ADDRESS_STR_LEN];
     uint16_t i;
 
     printf("Received message from [%s]:%u: ",
-        mira_net_toolkit_format_address(buffer, metadata->source_address),
-        metadata->source_port);
+           mira_net_toolkit_format_address(buffer, metadata->source_address),
+           metadata->source_port);
     for (i = 0; i < data_len; i++) {
-        printf("%c", ((char *) data)[i]);
+        printf("%c", ((char*)data)[i]);
     }
     printf("\n");
 }
 
-static void print_fota_image_status(uint16_t slot_id) {
-#if CONFIG_MIRA_FOTA_INIT   
+static void print_fota_image_status(uint16_t slot_id)
+{
+#if CONFIG_MIRA_FOTA_INIT
     if (mira_fota_is_valid(FOTA_SLOT_ID)) {
-        printf("FOTA image valid!\n");
+        printf("FOTA image valid\n");
     } else {
-        printf("FOTA image invalid\n");
+        printf("FOTA image invalid!\n");
     }
 #endif /* CONFIG_MIRA_FOTA_INIT */
 }
 
-static void poll_for_image(
-    void)
+static void poll_for_image(void)
 {
 #if CONFIG_MIRA_FOTA_INIT
-    printf("Requesting firmware!\n");
+    printf("Requesting firmware\n");
     int ret = mira_fota_force_request();
-    if(ret != 0) {
+    if (ret != 0) {
         printf("Forced fota request failed: %d\n", ret);
     }
 #endif /* CONFIG_MIRA_FOTA_INIT */
 }
 
-void network_init(
-    void)
+void network_init(void)
 {
     set_net_config();
     mira_net_init(&net_config);
@@ -125,28 +130,25 @@ void network_init(
 #endif /* CONFIG_MIRA_FOTA_INIT */
 }
 
-void send_hello_world(
-    void)
+void send_hello_world(void)
 {
-    mira_net_udp_connection_t *conn;
+    mira_net_udp_connection_t* conn;
     mira_net_state_t net_state;
     mira_status_t res;
     mira_net_address_t addr;
     bool requested_fota_from_root = false;
     char buffer[MIRA_NET_MAX_ADDRESS_STR_LEN];
-    char *message = "Hello world from Zephyr!";
+    char* message = "Hello world from Zephyr!";
     conn = mira_net_udp_connect(NULL, 0, udp_listen_callback, NULL);
 
     while (1) {
         net_state = mira_net_get_state();
         if (net_state != MIRA_NET_STATE_JOINED) {
-            printf(
-                "Waiting for network (state is %s)\n",
-                net_state == MIRA_NET_STATE_NOT_ASSOCIATED ? "not associated"
-                : net_state == MIRA_NET_STATE_ASSOCIATED ? "associated"
-                : net_state == MIRA_NET_STATE_JOINED ? "joined"
-                : "UNKNOWN"
-            );
+            printf("Waiting for network (state is %s)\n",
+                   net_state == MIRA_NET_STATE_NOT_ASSOCIATED ? "not associated"
+                   : net_state == MIRA_NET_STATE_ASSOCIATED   ? "associated"
+                   : net_state == MIRA_NET_STATE_JOINED       ? "joined"
+                                                              : "UNKNOWN");
             k_sleep(K_SECONDS(1));
         } else {
             res = mira_net_get_root_address(&addr);
@@ -159,8 +161,7 @@ void send_hello_world(
                     poll_for_image();
                     requested_fota_from_root = true;
                 }
-                printf("Sending to address: %s\n",
-                    mira_net_toolkit_format_address(buffer, &addr));
+                printf("Sending to address: %s\n", mira_net_toolkit_format_address(buffer, &addr));
                 mira_net_udp_send_to(conn, &addr, UDP_PORT, message, strlen(message));
                 print_fota_image_status(FOTA_SLOT_ID);
                 k_sleep(K_SECONDS(60));
@@ -169,8 +170,7 @@ void send_hello_world(
     }
 }
 
-void receieve_hello_world(
-    void)
+void receieve_hello_world(void)
 {
     mira_net_udp_listen(UDP_PORT, udp_listen_callback, NULL);
     while (1) {
@@ -179,21 +179,26 @@ void receieve_hello_world(
     }
 }
 
-int main(
-    void)
+int main(void)
 {
-    printf("-------------------MiraMesh Sender-------------------\n");
+    printf("-------------MiraMesh network example-------------\n");
 
     mira_sys_device_id_t devid;
 
     mira_sys_get_device_id(&devid);
     printf("Device ID: %02x%02x%02x%02x%02x%02x%02x%02x\n",
-        devid.u8[0], devid.u8[1], devid.u8[2], devid.u8[3],
-        devid.u8[4], devid.u8[5], devid.u8[6], devid.u8[7]
-    );
+           devid.u8[0],
+           devid.u8[1],
+           devid.u8[2],
+           devid.u8[3],
+           devid.u8[4],
+           devid.u8[5],
+           devid.u8[6],
+           devid.u8[7]);
 
     network_init();
-    if (net_config.mode == MIRA_NET_MODE_ROOT || net_config.mode == MIRA_NET_MODE_ROOT_NO_RECONNECT) {
+    if (net_config.mode == MIRA_NET_MODE_ROOT ||
+        net_config.mode == MIRA_NET_MODE_ROOT_NO_RECONNECT) {
         receieve_hello_world();
     } else {
         send_hello_world();
@@ -201,5 +206,4 @@ int main(
     while (1) {
         k_sleep(K_FOREVER);
     }
-
 }

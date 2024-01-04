@@ -16,4 +16,4 @@ manifest:
       path: modules/miramesh-zephyr
       revision: main
   self:
-    path: app
+    path: miramesh-network-example

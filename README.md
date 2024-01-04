@@ -1,4 +1,4 @@
-# Miramesh Zephyr network sender
+# Miramesh Zephyr network example
 
 This example demonstrates the integration of
 [MiraMesh](https://docs.lumenrad.io/miraos/latest/)
@@ -51,7 +51,7 @@ steps:
           repo-path: miramesh-zephyr-network-example
           remote: lumenradio
           revision: main
-          path: app
+          path: miramesh-network-example
           import:
             name-allowlist: miramesh-zephyr
 
@@ -73,11 +73,11 @@ the [build](#building) step.
 
     `west update`
 
-4. Extract the libmira archive into `vendor/libmira`.
+4. Extract the libmira archive into `<path_to_west_workspace>/vendor/libmira`.
 5. Build the application with one of these commands:
 
-    For nRF52840: `west build -b nrf52840dk_nrf52840 -s app`  
-    For nRF52832: `west build -b nrf52dk_nrf52832 -s app`
+    For nRF52840: `west build -b nrf52840dk_nrf52840 -s miramesh-network-example`  
+    For nRF52832: `west build -b nrf52dk_nrf52832 -s miramesh-network-example`
 
 6. Connect the dev board, either nRF52DK or nRF52840DK.
 7. Recover the device in case it is in APPROTECT mode.  
@@ -98,12 +98,12 @@ the [build](#building) step.
 10. Connect to the development kit's serial port.
 
 After a reset, you should see a message like:
-`"-------------------MiraMesh Sender-------------------."`.
+`"-------------MiraMesh network example-------------"`.
 
 A continuous stream of `"Waiting for network..."` indicates that everything works as it should.
 
 To receive the messages, a root/receiver device is required.
-The network_receiver example from mira's examples can be used,
+The network_receiver example from MiraOS examples can be used,
 but it is also possible to use this example's firmware:
 
 Configure one device to be a root/receiver by running:
@@ -112,14 +112,23 @@ nrfjprog --eraseuicr -s <snr>
 nrfjprog --memwr 0x100010C0 --val 0x1234 -s <snr>
 nrfjprog --reset -s <snr>
 ```
-Which erases the UICR's memory, writes 0x1234 to UICR CUSTOMER16, then resets the device.
+Which erases the UICR's memory, writes 0x1234 to `UICR->CUSTOMER[16]` register, then resets the device.
 
 Note: MiraMesh connection times can improve if you reset the network
 sender after initializing the receiver.
 
-## Update via MCUboot
+## Firmware update via MCUboot
 
-The example by default uses MCUboot to support updates via FOTA.
+The example by default uses MCUboot to support firmware updates locally and also over the network using FOTA.
+
+The firmware update can be done by [installing an updated firmware image](#local-firmware-update)
+in swap memory region using nrfjprog.
+
+The firmware installed with nrfjprog can be further propagated to other
+devices in the network using
+[Miramesh's firmware transfer method](#propagating-the-installed-firmware-with-mirameshs-built-in-firmware-transfer).
+
+### Local firmware update
 
 To create a upgrade image and install it:
 1. Build the new application with west.
@@ -138,13 +147,10 @@ To create a upgrade image and install it:
 
 ### Propagating the installed firmware with Miramesh's built in firmware transfer
 
-The firmware installed with nrfjprog can be further propagated to other
-devices in the network using Miramesh's firmware transfer method.
-
 To enable the firmware transfer, the following config needs to be
 added to prj.conf: `CONFIG_MIRA_FOTA_INIT=y`.
 
-Then the firmware has to be installed on the root and the root will
+The updated firmware has to be installed locally on the root. The root will
 then propagate the firmware to the rest of the nodes in the network.
 
 ## Common problems
@@ -176,3 +182,10 @@ This is likely due to the correct toolchain not being launched. Make sure you ex
 west commands in an nRF connect toolchain shell by running:
 
 `nrfutil toolchain-manager launch --ncs-version v2.5.0 --shell`
+
+### "ERROR: Could not find a package configuration file provided by "Zephyr"...
+
+This is likely due to missing reference to the Zephyr CMake package. This  can be
+resolved by running:
+
+`west zephyr-export`
