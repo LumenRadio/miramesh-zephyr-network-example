@@ -77,7 +77,7 @@ static int fota_driver_get_size(uint16_t slot_id,
         done_callback(storage);
         return 0;
     } else {
-        LOG_DBG("Slot %d not available", slot_id);
+        LOG_ERROR("Slot %d not available", slot_id);
         return -1;
     }
 }
@@ -179,7 +179,7 @@ static int fota_driver_read(uint16_t slot_id,
         done_callback(storage);
         return 0;
     } else {
-        LOG_DBG("Slot %d not available", slot_id);
+        LOG_ERROR("Slot %d not available", slot_id);
         return -1;
     }
 }
@@ -271,7 +271,7 @@ static int fota_driver_write(uint16_t slot_id,
         done_callback(storage);
         return 0;
     } else {
-        LOG_DBG("Slot %d not available", slot_id);
+        LOG_ERROR("Slot %d not available", slot_id);
         return -1;
     }
 }
@@ -322,7 +322,7 @@ static int fota_driver_erase(uint16_t slot_id, void (*done_callback)(void* stora
         storage_erase = storage;
         return 0;
     } else {
-        LOG_DBG("Slot %d not available", slot_id);
+        LOG_ERROR("Slot %d not available", slot_id);
         return -1;
     }
 }
