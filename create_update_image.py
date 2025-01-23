@@ -7,7 +7,7 @@ import functools
 import struct
 import zlib
 
-from intelhex import IntelHex
+from intelhex import IntelHex, hex2bin
 
 
 def parse_arguments():
@@ -23,7 +23,7 @@ def parse_arguments():
         "--output",
         "-O",
         help="Path to app_moved_test_update.hex file",
-        default="update_app.hex",
+        required=True,
     )
     parser.add_argument(
         "--page-size",
@@ -49,6 +49,13 @@ def parse_arguments():
         help="Address of the backup trailer",
         default=0xFE000,
     )
+    parser.add_argument(
+        "--gateway",
+        action="store_true",
+        default=False,
+        help="Generate .bin file for use with Mira gateway FOTA. \
+            Only --input and --output arguments are used"
+    )
     return parser.parse_args()
 
 
@@ -64,33 +71,35 @@ def main():
     args = parse_arguments()
     app_hex = args.input
     output_hex = args.output
+    if args.gateway:
+        hex2bin(app_hex, args.output, None, None, None, None)
+    else:
+        page_size = args.page_size
+        backup_header_start = args.backup_header_start
+        backup_trailer_start = args.backup_trailer_start
 
-    page_size = args.page_size
-    backup_header_start = args.backup_header_start
-    backup_trailer_start = args.backup_trailer_start
+        mcuboot_pad_size = args.mcuboot_pad_size
 
-    mcuboot_pad_size = args.mcuboot_pad_size
+        hex_data = IntelHex(app_hex)
+        binary_data = hex_data.tobinarray()
 
-    hex_data = IntelHex(app_hex)
-    binary_data = hex_data.tobinarray()
+        total_pages = (len(binary_data) + page_size - 1) // page_size
 
-    total_pages = (len(binary_data) + page_size - 1) // page_size
+        # Add header backup page:
+        hex_data.frombytes(binary_data[0:page_size], backup_header_start)
 
-    # Add header backup page:
-    hex_data.frombytes(binary_data[0:page_size], backup_header_start)
+        # Add fota header:
+        fota_header = create_fota_header(binary_data, 0, 0, 0)
+        hex_data.frombytes(
+            fota_header, backup_header_start + mcuboot_pad_size - len(fota_header)
+        )
 
-    # Add fota header:
-    fota_header = create_fota_header(binary_data, 0, 0, 0)
-    hex_data.frombytes(
-        fota_header, backup_header_start + mcuboot_pad_size - len(fota_header)
-    )
+        # Add trailer backup page:
+        hex_data.frombytes(
+            binary_data[((total_pages - 1) * page_size) :], backup_trailer_start
+        )
 
-    # Add trailer backup page:
-    hex_data.frombytes(
-        binary_data[((total_pages - 1) * page_size) :], backup_trailer_start
-    )
-
-    hex_data.tofile(output_hex, format="hex")
+        hex_data.tofile(output_hex, format="hex")
 
 
 main()

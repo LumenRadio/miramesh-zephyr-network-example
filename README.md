@@ -139,7 +139,7 @@ To create a upgrade image and install it:
     Use `--help` as argument to `create_update_image.py` to see its
     possible arguments.  
     Its default arguments are suitable for nRF52840.  
-    For nRF52832 use: `./create_update_image.py --backup-header-start 0x7d000 --backup-trailer-start 0x7e000`
+    For nRF52832 use: `./create_update_image.py --output app_updated.hex --backup-header-start 0x7d000 --backup-trailer-start 0x7e000`
 
 3. To install it, run:
 
@@ -150,8 +150,21 @@ To create a upgrade image and install it:
 To enable the firmware transfer, the following config needs to be
 added to prj.conf: `CONFIG_MIRA_FOTA_INIT=y`.
 
+#### Update using a root node
 The updated firmware has to be installed locally on the root. The root will
 then propagate the firmware to the rest of the nodes in the network.
+
+#### Update using a Mira Gateway
+To do a FOTA update when having the Mira Gateway as the root node, the binary file that is used for
+the gateway has to be generated using the `create_update_image.py` script, but with the `--gateway`
+argument.
+
+```shell
+./create_update_image.py --output app_updated.bin --gateway
+```
+
+Then the output file `app_moved_test_update.bin` should be moved the the Mira gateway's `firmwares/` folder
+and be renamed to `0.bin`.
 
 ## Common problems
 
