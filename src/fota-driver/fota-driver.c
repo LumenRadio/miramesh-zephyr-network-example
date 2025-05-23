@@ -112,24 +112,6 @@ static int fota_driver_read(uint16_t slot_id,
     if (slot_id == 0) {
         uint8_t* img_fragment = data;
         const struct device* swap_dev = SWAP_DEVICE;
-        if (address == 0 && length == MIRA_FOTA_HEADER_SIZE) {
-            const struct device* header_dev = IMAGE_HEADER_PAGE_DEVICE;
-            LOG_DBG(
-              "Read from slot 0, Mira header, addr: %d, length: %d", MIRA_HEADER_LOCATION, length);
-            flash_read(header_dev,
-                       HEADER_PAGE_ADDRESS(MIRA_HEADER_LOCATION),
-                       img_fragment,
-                       MIRA_FOTA_HEADER_SIZE);
-            done_callback(storage);
-            return 0;
-        }
-        // When not reading the header, the address is offsetted by the header size, this
-        // removes the offset
-        if (address >= MIRA_FOTA_HEADER_SIZE) {
-            address -= MIRA_FOTA_HEADER_SIZE;
-        } else {
-            return -1;
-        }
         if (address_in_header_page(address)) {
             const struct device* header_dev = IMAGE_HEADER_PAGE_DEVICE;
             uint32_t overlap = flash_check_overlapping(address, length);
@@ -194,24 +176,6 @@ static int fota_driver_write(uint16_t slot_id,
     if (slot_id == 0) {
         const uint8_t* img_fragment = data;
         const struct device* swap_dev = SWAP_DEVICE;
-        if (address == 0 && length == MIRA_FOTA_HEADER_SIZE) {
-            const struct device* header_dev = IMAGE_HEADER_PAGE_DEVICE;
-            LOG_DBG(
-              "Write to slot 0, Mira header, addr: %d, length: %d", MIRA_HEADER_LOCATION, length);
-            flash_write(header_dev,
-                        HEADER_PAGE_ADDRESS(MIRA_HEADER_LOCATION),
-                        img_fragment,
-                        MIRA_FOTA_HEADER_SIZE);
-            done_callback(storage);
-            return 0;
-        }
-        // When not writing the header, the address is offsetted by the header size, this
-        // removes the offset
-        if (address >= MIRA_FOTA_HEADER_SIZE) {
-            address -= MIRA_FOTA_HEADER_SIZE;
-        } else {
-            return -1;
-        }
         if (address_in_header_page(address)) {
             const struct device* header_dev = IMAGE_HEADER_PAGE_DEVICE;
             uint32_t overlap = flash_check_overlapping(address, length);
@@ -276,6 +240,50 @@ static int fota_driver_write(uint16_t slot_id,
     }
 }
 
+static int fota_driver_read_header(uint16_t slot_id,
+                            void* data,
+                            void (*done_callback)(void* storage),
+                            void* storage)
+{
+    if (slot_id == 0) {
+        uint8_t* img_fragment = data;
+        const struct device* header_dev = IMAGE_HEADER_PAGE_DEVICE;
+        LOG_DBG(
+          "Read from slot 0, Mira header, addr: %d, length: %d", MIRA_HEADER_LOCATION, MIRA_FOTA_HEADER_SIZE);
+        flash_read(header_dev,
+                   HEADER_PAGE_ADDRESS(MIRA_HEADER_LOCATION),
+                   img_fragment,
+                   MIRA_FOTA_HEADER_SIZE);
+        done_callback(storage);
+        return 0;
+    } else {
+        LOG_DBG("Slot %d not available", slot_id);
+        return -1;
+    }
+}
+
+static int fota_driver_write_header(uint16_t slot_id,
+                             const void* data,
+                             void (*done_callback)(void* storage),
+                             void* storage)
+{
+    if (slot_id == 0) {
+        const uint8_t* img_fragment = data;
+        const struct device* header_dev = IMAGE_HEADER_PAGE_DEVICE;
+        LOG_DBG(
+          "Write to slot 0, Mira header, addr: %d, length: %d", MIRA_HEADER_LOCATION, MIRA_FOTA_HEADER_SIZE);
+        flash_write(header_dev,
+                    HEADER_PAGE_ADDRESS(MIRA_HEADER_LOCATION),
+                    img_fragment,
+                    MIRA_FOTA_HEADER_SIZE);
+        done_callback(storage);
+        return 0;
+    } else {
+        LOG_DBG("Slot %d not available", slot_id);
+        return -1;
+    }
+}
+
 static void (*done_callback_erase)(void* storage) = NULL;
 static void* storage_erase = NULL;
 
@@ -331,10 +339,19 @@ void fota_driver_init(void) {}
 
 void fota_driver_set_custom_driver(void)
 {
-    mira_fota_set_driver(fota_driver_init,
-                         fota_driver_get_size,
-                         fota_driver_read,
-                         fota_driver_write,
-                         fota_driver_erase);
+    /* Zero out the struct to set unassigned callback to NULL */
+    mira_fota_driver_t fota_driver = {0};
+
+    fota_driver = (mira_fota_driver_t) {
+        .init = fota_driver_init,
+        .get_size = fota_driver_get_size,
+        .read = fota_driver_read,
+        .write = fota_driver_write,
+        .erase = fota_driver_erase,
+        .read_header = fota_driver_read_header,
+        .write_header = fota_driver_write_header
+    };
+
+    mira_fota_set_driver(&fota_driver);
 }
 #endif

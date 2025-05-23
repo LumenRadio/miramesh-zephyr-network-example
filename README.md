@@ -25,8 +25,9 @@ The following configurations have been tested:
 | Libmira version | Version tag     | nRF Connect toolchain |
 | --------------- | --------------- | ----------------------|
 | 2.9.0           | v2.9.0          | v2.5.0                |
+| 2.10.0          | v2.10.0         | v2.5.1                |
 
-Other versions may work as well. For example, v2.9.0 is likely to be compatible with other 2.9.x versions of libmira, but these have not been tested or verified. Similarly, different versions of the toolchain may work, but they are not tested.
+Other versions may work as well. For example, v2.10.0 is likely to be compatible with other 2.10.x versions of libmira, but these have not been tested or verified. Similarly, different versions of the toolchain may work, but they are not tested.
 
 ## Creating a new west workspace
 

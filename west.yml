@@ -8,12 +8,12 @@ manifest:
     - name: nrf
       repo-path: sdk-nrf
       remote: ncs
-      revision: v2.5.0
+      revision: v2.5.1
       import: true
     - name: miramesh-zephyr
       remote: miramesh-zephyr
       repo-path: miramesh-zephyr
       path: modules/miramesh-zephyr
-      revision: miramesh-2.9.0-ncs-v2.5.0
+      revision: miramesh-2.10.0-ncs-v2.5.1
   self:
     path: miramesh-network-example
