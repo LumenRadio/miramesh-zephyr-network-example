@@ -6,9 +6,6 @@ into the Zephyr environment using the nRF Connect SDK. The produced
 binary is a Zephyr application that continuously transmits messages
 via MiraMesh.
 
-This project is compatible with nRF Connect SDK version 2.5.0.
-Other versions might work as well, but that has not been verified.
-
 You can [create a new west workspace](#creating-a-new-west-workspace)
 from this project's manifest file.
 
@@ -19,55 +16,38 @@ ncs and zephyr.
 You can also [import the project](#using-an-existing-west-workspace)
 into an existing west workspace to avoid having multiple workspaces.
 
+## Tags and tested versions
+
+This repository uses version tags that map to corresponding libmira versions. For example, a user of libmira version 2.9.0 should use the tag v2.9.0. Each version tag has a recommended nRF Connect Toolchain version.
+
+The following configurations have been tested:
+
+| Libmira version | Version tag     | nRF Connect toolchain |
+| --------------- | --------------- | ----------------------|
+| 2.9.0           | v2.9.0          | v2.5.0                |
+
+Other versions may work as well. For example, v2.9.0 is likely to be compatible with other 2.9.x versions of libmira, but these have not been tested or verified. Similarly, different versions of the toolchain may work, but they are not tested.
+
 ## Creating a new west workspace
 
 1. [Install nRF Connect toolchain](https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/installation/install_ncs.html)
 2. Open a shell set up for the nRF Connect toolchain:
 
-    `nrfutil toolchain-manager launch --ncs-version v2.5.0 --shell`  
-    Other toolkit versions might work. This has been tested and verified with v2.5.0.
+    `nrfutil toolchain-manager launch --ncs-version <nRF Connect toolchain> --shell`
 
 3. Initialize the project workspace:
 
-    `west init -m https://github.com/LumenRadio/miramesh-zephyr-network-example --mr main <path_to_west_workspace_to_create>`
-
-## Using an existing west workspace
-
-If you have an existing nRF Connect SDK west workspace follow these
-steps:
-
-1. Add the LumenRadio github as a remote to `ncs/v2.5.0/nrf/west.yml`:
-
-        remotes:
-            ...
-            - name: lumenradio
-            url-base: https://github.com/LumenRadio
-
-2. Add the project and its dependency [miramesh-zephyr](https://github.com/LumenRadio/miramesh-zephyr) to the same `west.yml` file:
-
-        projects:
-        ...
-        - name: miramesh-zephyr-network-example
-          repo-path: miramesh-zephyr-network-example
-          remote: lumenradio
-          revision: main
-          path: miramesh-network-example
-          import:
-            name-allowlist: miramesh-zephyr
-
-
-This repo and its dependencies will then be downloaded in
-the [build](#building) step.
+    `west init -m https://github.com/LumenRadio/miramesh-zephyr-network-example --mr <Version tag> <path_to_west_workspace_to_create>`
 
 ## Building
 
 1. Open a shell set up for nRF Connect toolchain if you haven't already done so:
 
-    `nrfutil toolchain-manager launch --ncs-version v2.5.0 --shell`
+    `nrfutil toolchain-manager launch --ncs-version <nRF Connect toolchain> --shell`
 
 2. Navigate to the workspace:
 
-    `cd <path_to_west_workspace>` (below the `v2.5.0` dir, if using the existing ncs installation).
+    `cd <path_to_west_workspace>`
 
 3. Update the workspace:
 
@@ -76,8 +56,8 @@ the [build](#building) step.
 4. Extract the libmira archive into `<path_to_west_workspace>/vendor/libmira`.
 5. Build the application with one of these commands:
 
-    For nRF52840: `west build -b nrf52840dk_nrf52840 -s miramesh-network-example`  
-    For nRF52832: `west build -b nrf52dk_nrf52832 -s miramesh-network-example`
+    For nRF52840: `west build -b nrf52840dk_nrf52840 -s miramesh-zephyr-network-example`
+    For nRF52832: `west build -b nrf52dk_nrf52832 -s miramesh-zephyr-network-example`
 
 6. Connect the dev board, either nRF52DK or nRF52840DK.
 7. Recover the device in case it is in APPROTECT mode.  
@@ -194,7 +174,7 @@ the error.
 This is likely due to the correct toolchain not being launched. Make sure you execute
 west commands in an nRF connect toolchain shell by running:
 
-`nrfutil toolchain-manager launch --ncs-version v2.5.0 --shell`
+`nrfutil toolchain-manager launch --ncs-version <nRF Connect toolchain> --shell`
 
 ### "ERROR: Could not find a package configuration file provided by "Zephyr"...
 
