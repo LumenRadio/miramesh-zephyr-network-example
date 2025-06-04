@@ -1,0 +1,16 @@
+image_header_page:
+  address: 0x161000
+  end_address: 0x162000
+  size: 0x1000
+image_trailer_page:
+  address: 0x162000
+  end_address: 0x163000
+  size: 0x1000
+config_area:
+  address: 0x163000
+  end_address: 0x164000
+  size: 0x1000
+factory_config:
+  address: 0x164000
+  end_address: 0x165000
+  size: 0x1000

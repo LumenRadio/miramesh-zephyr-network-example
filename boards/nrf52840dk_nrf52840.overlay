@@ -11,3 +11,16 @@
         };
     };
 };
+
+callback_swi: &swi3 {
+    interrupts = <23 5>;
+};
+
+miramesh_swi: &swi0 { /* Supported peripheral IDs are 0, 2 and 4 */
+    interrupts = <20 1>;
+};
+
+/* Only rtc2 is supported by Miramesh */
+&rtc2 {
+    interrupts = <36 5>;
+};

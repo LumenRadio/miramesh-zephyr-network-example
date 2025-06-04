@@ -1,8 +1,26 @@
 config MIRA_FOTA_INIT
     bool "Initialize Mira FOTA driver"
+    select BT_PERIPHERAL
+    select BT
+    select NCS_SAMPLE_MCUMGR_BT_OTA_DFU
+    select MCUMGR_TRANSPORT_BT
+    select MCUMGR_TRANSPORT_BT_CONN_PARAM_CONTROL
+    select MCUMGR_TRANSPORT_BT_REASSEMBLY
+    select MCUMGR_GRP_OS_MCUMGR_PARAMS
+    select MCUMGR_MGMT_NOTIFICATION_HOOKS
+    select MCUMGR_GRP_IMG_STATUS_HOOKS
+    select MCUMGR_GRP_OS_RESET_HOOK
+    select DK_LIBRARY
+
 
 config MIRA_FOTA_LOGGING
     bool "Turn on or off logging"
+
+if MIRA_FOTA_LOGGING
+module = MIRA_FOTA_DRIVER
+module-str = fota-driver
+source "subsys/logging/Kconfig.template.log_config"
+endif
 
 menu "Zephyr Kernel"
   source "Kconfig.zephyr"

@@ -1,0 +1,36 @@
+// Take 0x1000 bytes from storage partition and use for mira factory config
+&storage_partition {
+    reg = <0x15C000 DT_SIZE_K(32)>;
+};
+
+&cpuapp_rram {
+    partitions {
+        compatible = "fixed-partitions";
+        factory_config: partition@164000 {
+          reg = <0x164000 DT_SIZE_K(4)>;
+        };
+    };
+};
+
+/* GRTCn used by the kernel timer is 227 for the NS build */
+&grtc {
+    interrupts = <227 0x5>, <229 NRF_DEFAULT_IRQ_PRIORITY>;
+};
+
+
+/* Add swi01 node as it doesn't exist in provided DTS files */
+/ {
+    soc {
+        callback_swi: swi01@5001d000 {
+            reg = <0x5001d000 0x1000>;
+            interrupts = <29 5>;
+        };
+    };
+};
+
+
+/ {
+	zephyr,user {
+        miramesh_egu_event = <1>;
+	};
+};

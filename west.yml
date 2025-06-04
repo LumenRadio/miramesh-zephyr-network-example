@@ -8,12 +8,14 @@ manifest:
     - name: nrf
       repo-path: sdk-nrf
       remote: ncs
-      revision: v2.5.1
+      revision: v3.0.1
       import: true
     - name: miramesh-zephyr
       remote: miramesh-zephyr
       repo-path: miramesh-zephyr
       path: modules/miramesh-zephyr
-      revision: miramesh-2.10.0-ncs-v2.5.1
+      revision: miramesh-2.11.0-beta1-ncs-v3.0.1
+      # Include west extenstion
+      west-commands: scripts/west/west-commands.yml
   self:
     path: miramesh-network-example

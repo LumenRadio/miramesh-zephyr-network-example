@@ -1,8 +1,12 @@
 image_header_page:
+  address: 0x7c000
+  end_address: 0x7d000
+  size: 0x1000
+image_trailer_page:
   address: 0x7d000
   end_address: 0x7e000
   size: 0x1000
-image_trailer_page:
+config_area:
   address: 0x7e000
   end_address: 0x7f000
   size: 0x1000

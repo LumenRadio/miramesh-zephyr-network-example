@@ -1,10 +1,14 @@
 image_header_page:
+  address: 0xfc000
+  end_address: 0x0fd000
+  size: 0x1000
+image_trailer_page:
   address: 0xfd000
   end_address: 0x0fe000
   size: 0x1000
-image_trailer_page:
+config_area:
   address: 0xfe000
-  end_address: 0x0ff000
+  end_address: 0xff000
   size: 0x1000
 factory_config:
   address: 0xff000
